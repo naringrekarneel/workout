@@ -1,4 +1,9 @@
-# Workouts Mobile App (Capacitor)
+# Workouts Mobile App (Capacitor & Web)
+
+[![Deploy to GitHub Pages](https://github.com/naringrekarneel/workout/actions/workflows/deploy.yml/badge.svg)](https://github.com/naringrekarneel/workout/actions/workflows/deploy.yml)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-brightgreen)](https://naringrekarneel.github.io/workout/)
+
+> 🌐 **Live Web App**: [https://naringrekarneel.github.io/workout/](https://naringrekarneel.github.io/workout/)
 
 A cross-platform mobile fitness and workout tracker converted from multi-page web prototypes into a single-page application (SPA) powered by **Capacitor 8**, **Vite**, **Tailwind CSS**, and **Chart.js**.
 
