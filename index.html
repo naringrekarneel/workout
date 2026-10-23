@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#0d0d0f]">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0d0f">
+  <meta name="color-scheme" content="dark">
+  <title>Workouts</title>
+</head>
+<body class="h-full w-full bg-[#0d0d0f] text-white overflow-hidden flex flex-col font-sans select-none">
+
+  <!-- Active View Viewport -->
+  <div id="appViewContainer" class="flex-1 overflow-y-auto no-scrollbar w-full">
+    <!-- Active view dynamically mounted here -->
+  </div>
+
+  <!-- Bottom Navigation Bar (Safe Area Compliant) -->
+  <nav id="bottomNavBar" class="w-full bg-[#0d0d0f]/95 backdrop-blur-md border-t border-gray-900/90 px-6 pt-2.5 pb-safe flex justify-between items-center z-50 fixed bottom-0 left-0 right-0 max-w-lg mx-auto">
+    <button id="navItemDashboard" class="text-white p-2 transition-all active:scale-90" title="Dashboard">
+      <i class="ph-fill ph-squares-four text-2xl"></i>
+    </button>
+    <button id="navItemSaved" class="text-gray-500 hover:text-white p-2 transition-all active:scale-90" title="Saved Workouts">
+      <i class="ph ph-calendar-blank text-2xl"></i>
+    </button>
+    <button id="navItemLog" class="w-11 h-11 bg-white text-black rounded-full flex justify-center items-center hover:bg-gray-200 transition-transform active:scale-90 shadow-[0_0_18px_rgba(255,255,255,0.18)]" title="Log Workout">
+      <i class="ph ph-plus text-xl font-extrabold"></i>
+    </button>
+    <button id="navItemAnalytics" class="text-gray-500 hover:text-white p-2 transition-all active:scale-90" title="Volume Analytics">
+      <i class="ph ph-chart-bar text-2xl"></i>
+    </button>
+    <button id="navItemJournal" class="text-gray-500 hover:text-white p-2 transition-all active:scale-90" title="Recovery Journal">
+      <i class="ph ph-chat-centered text-2xl"></i>
+    </button>
+  </nav>
+
+  <!-- Modals Mount Container -->
+  <div id="modalsContainer"></div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

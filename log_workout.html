@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Workout</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#0d0d0f',
+                        card: '#1e1f23',
+                        cardHover: '#2a2b30',
+                        textPrimary: '#ffffff',
+                        textSecondary: '#9ca3af',
+                        accent: '#ffffff'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0d0d0f; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .mobile-container { width: 100%; max-width: 400px; background-color: #0d0d0f; height: 850px; border-radius: 40px; overflow: hidden; position: relative; box-shadow: 0 0 0 10px #1a1a1a, 0 25px 50px -12px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .hover-target { position: relative; outline: 2px solid transparent; transition: outline 0.2s ease; }
+    </style>
+</head>
+<body>
+
+    <!-- Page Marking Badge & Switcher -->
+    <div class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[999999] bg-[#1e1f23]/95 backdrop-blur-md border border-gray-700/80 rounded-full px-4 py-1.5 shadow-2xl flex items-center space-x-3 text-xs">
+        <span class="bg-purple-600 text-white font-bold px-2 py-0.5 rounded-full text-[11px] tracking-wide shadow-sm">PAGE 3</span>
+        <span class="font-semibold text-white">Log Workout</span>
+        <span class="text-gray-600">|</span>
+        <div class="flex items-center space-x-1.5 text-textSecondary font-medium">
+            <a href="index.html" class="px-2 py-0.5 rounded-md hover:bg-gray-800 hover:text-white transition-colors">P1: Dashboard</a>
+            <a href="upload_weight.html" class="px-2 py-0.5 rounded-md hover:bg-gray-800 hover:text-white transition-colors">P2: Weight</a>
+            <a href="log_workout.html" class="px-2 py-0.5 rounded-md bg-white/20 text-white font-bold">P3</a>
+            <a href="saved_workouts.html" class="px-2 py-0.5 rounded-md hover:bg-gray-800 hover:text-white transition-colors">P4: Saved</a>
+        </div>
+    </div>
+
+    <div class="mobile-container overflow-hidden relative">
+        <div class="flex-1 overflow-y-auto no-scrollbar pb-32 w-full">
+            <!-- Header -->
+            <header class="flex justify-between items-center px-6 pt-12 pb-6 hover-target">
+                <button onclick="window.location.href='index.html'" class="w-10 h-10 bg-card rounded-full flex justify-center items-center hover:bg-cardHover transition-colors hover-target">
+                    <i class="ph ph-caret-left text-xl"></i>
+                </button>
+                <h1 class="text-xl font-bold tracking-tight hover-target">Log Workout</h1>
+                <button id="btnCopyWorkout" onclick="openCopyWorkoutModal()" class="w-10 h-10 bg-card rounded-full flex justify-center items-center text-white hover:bg-cardHover transition-colors hover-target" title="Copy / Reuse Workout">
+                    <i class="ph ph-copy text-xl"></i>
+                </button>
+            </header>
+
+            <!-- Main Content -->
+            <main class="px-6 space-y-6">
+                <!-- Workout Type Selector -->
+                <div class="space-y-2 hover-target">
+                    <div class="flex justify-between items-center">
+                        <label class="text-xs text-textSecondary uppercase tracking-wider font-semibold hover-target">Routine Split</label>
+                        <button id="btnEditRoutines" type="button" class="w-7 h-7 rounded-full bg-card flex justify-center items-center text-textSecondary hover:text-white hover:bg-cardHover transition-colors hover-target" title="Edit Routines">
+                            <i class="ph ph-pencil-simple text-sm"></i>
+                        </button>
+                    </div>
+                    <div id="routinePillsContainer" class="flex flex-wrap gap-2 pt-0.5">
+                        <!-- Dynamic routine pills rendered here -->
+                    </div>
+                </div>
+
+                <!-- Live Workout Timer & Rest Stopwatch Card -->
+                <div class="bg-card rounded-3xl p-5 space-y-4 hover-target border border-gray-800/60 shadow-xl">
+                    <!-- Top Row: Compact Workout Title & Live Status -->
+                    <div class="flex justify-between items-center pb-3 border-b border-gray-800/70 hover-target">
+                        <div class="flex-1 mr-2">
+                            <input id="workoutTitleInput" type="text" value="Chest + Tricep Blast" class="w-full bg-transparent font-bold text-base text-white focus:outline-none hover-target">
+                            <div class="flex items-center space-x-2 mt-0.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span class="text-[11px] text-textSecondary hover-target">Session in progress</span>
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <input id="workoutDateInput" type="datetime-local" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10">
+                            <div class="text-[11px] font-semibold text-white flex items-center space-x-1 pointer-events-none bg-[#15161a] px-2.5 py-1 rounded-lg border border-gray-800 hover-target">
+                                <i class="ph ph-calendar text-textSecondary text-xs"></i>
+                                <span id="workoutDateDisplay">Today</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Middle Row: Elapsed Workout Timer & Rest Stopwatch -->
+                    <div class="grid grid-cols-2 gap-3 hover-target">
+                        <!-- Elapsed Timer -->
+                        <div class="bg-[#15161a] rounded-2xl p-3.5 flex flex-col justify-between border border-gray-800/60 hover-target">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[10px] uppercase font-bold text-textSecondary tracking-wider hover-target">Elapsed</span>
+                                <i class="ph-fill ph-timer text-blue-400 text-sm"></i>
+                            </div>
+                            <div id="elapsedTimerDisplay" class="text-2xl font-bold font-mono tracking-tight text-white my-1 hover-target">00:00</div>
+                            <div class="flex space-x-1 pt-1">
+                                <button id="btnToggleElapsed" type="button" onclick="toggleElapsedTimer()" class="flex-1 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[10px] font-semibold transition-colors flex items-center justify-center space-x-1 hover-target">
+                                    <i id="elapsedPlayIcon" class="ph-fill ph-pause"></i>
+                                    <span id="elapsedPlayText">Pause</span>
+                                </button>
+                                <button type="button" onclick="resetElapsedTimer()" class="px-2 py-1 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg text-[10px] transition-colors hover-target" title="Reset">
+                                    <i class="ph ph-arrow-counter-clockwise"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Rest Stopwatch -->
+                        <div class="bg-[#15161a] rounded-2xl p-3.5 flex flex-col justify-between border border-gray-800/60 hover-target">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[10px] uppercase font-bold text-textSecondary tracking-wider hover-target">Rest Timer</span>
+                                <i class="ph-fill ph-hourglass-simple text-amber-400 text-sm"></i>
+                            </div>
+                            <div id="restTimerDisplay" class="text-2xl font-bold font-mono tracking-tight text-white my-1 hover-target">00:00</div>
+                            <div class="flex space-x-1 pt-1">
+                                <button id="btnToggleRest" type="button" onclick="toggleRestTimer()" class="flex-1 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg text-[10px] font-semibold transition-colors flex items-center justify-center space-x-1 hover-target">
+                                    <i id="restPlayIcon" class="ph-fill ph-play"></i>
+                                    <span id="restPlayText">Start</span>
+                                </button>
+                                <button type="button" onclick="resetRestTimer()" class="px-2 py-1 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg text-[10px] transition-colors hover-target" title="Reset">
+                                    <i class="ph ph-arrow-counter-clockwise"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Quick Rest Presets -->
+                    <div class="flex items-center justify-between pt-1 hover-target">
+                        <span class="text-[10px] text-textSecondary font-semibold uppercase tracking-wider hover-target">Quick Rest:</span>
+                        <div class="flex space-x-1.5 hover-target">
+                            <button type="button" onclick="startRestCountdown(30)" class="px-2 py-1 bg-[#15161a] hover:bg-gray-800 border border-gray-800 text-gray-300 hover:text-white rounded-lg text-[10px] font-semibold transition-colors hover-target">30s</button>
+                            <button type="button" onclick="startRestCountdown(60)" class="px-2 py-1 bg-[#15161a] hover:bg-gray-800 border border-gray-800 text-gray-300 hover:text-white rounded-lg text-[10px] font-semibold transition-colors hover-target">60s</button>
+                            <button type="button" onclick="startRestCountdown(90)" class="px-2 py-1 bg-[#15161a] hover:bg-gray-800 border border-gray-800 text-gray-300 hover:text-white rounded-lg text-[10px] font-semibold transition-colors hover-target">90s</button>
+                            <button type="button" onclick="startRestCountdown(120)" class="px-2 py-1 bg-[#15161a] hover:bg-gray-800 border border-gray-800 text-gray-300 hover:text-white rounded-lg text-[10px] font-semibold transition-colors hover-target">2m</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exercise Section Categories (Bodyweight, Weighted, Mix) -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-semibold text-base text-white hover-target">Exercises</h3>
+                        </div>
+                        <div class="flex space-x-1.5">
+                            <button id="btnAddExercise" type="button" class="text-xs font-semibold text-white bg-card hover:bg-cardHover px-3 py-1.5 rounded-full flex items-center space-x-1 transition-colors hover-target">
+                                <i class="ph ph-plus"></i>
+                                <span>Add</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Category Filter Tabs -->
+                    <div class="bg-card p-1 rounded-2xl flex space-x-1 hover-target">
+                        <button type="button" onclick="setCategoryFilter('all')" id="tab-all" class="category-tab flex-1 py-1.5 text-center rounded-xl text-xs font-semibold bg-white text-black transition-all hover-target">All</button>
+                        <button type="button" onclick="setCategoryFilter('weighted')" id="tab-weighted" class="category-tab flex-1 py-1.5 text-center rounded-xl text-xs font-semibold text-textSecondary hover-text-white transition-all hover-target">Weighted</button>
+                        <button type="button" onclick="setCategoryFilter('bodyweight')" id="tab-bodyweight" class="category-tab flex-1 py-1.5 text-center rounded-xl text-xs font-semibold text-textSecondary hover-text-white transition-all hover-target">Bodyweight</button>
+                        <button type="button" onclick="setCategoryFilter('mix')" id="tab-mix" class="category-tab flex-1 py-1.5 text-center rounded-xl text-xs font-semibold text-textSecondary hover-target">Mix</button>
+                    </div>
+
+                    <div id="exerciseList" class="space-y-4">
+                        <!-- Dynamic Exercise Cards rendered here -->
+                    </div>
+                </div>
+
+                <!-- Notes Section -->
+                <div class="bg-card rounded-2xl p-4 flex flex-col space-y-2 hover-target">
+                    <label class="font-medium flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-gray-800 flex justify-center items-center">
+                            <i class="ph ph-note-pencil text-base text-white"></i>
+                        </div>
+                        <span class="text-sm">Workout Notes</span>
+                    </label>
+                    <textarea id="workoutNotesInput" class="bg-transparent w-full resize-none focus:outline-none text-sm text-textSecondary pl-11 hover-target" rows="2"></textarea>
+                </div>
+
+                <!-- History Section -->
+                <div class="pt-4 pb-4">
+                    <h3 class="font-semibold text-lg mb-3 hover-target">Recent Workouts</h3>
+                    <div id="workoutHistoryList" class="space-y-3">
+                        <!-- History items rendered here -->
+                    </div>
+                </div>
+
+                <!-- Spacer so content scrolls completely clear of bottom bar -->
+                <div class="h-28 w-full flex-shrink-0"></div>
+            </main>
+        </div>
+
+        <!-- Fixed Bottom Action Bar with Gradient Blur -->
+        <div class="absolute bottom-0 left-0 right-0 px-6 pt-6 pb-6 bg-gradient-to-t from-[#0d0d0f] via-[#0d0d0f] to-transparent z-40">
+            <button id="btnSaveBottom" class="w-full bg-white text-black font-semibold rounded-2xl py-4 text-[15px] hover:bg-gray-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.1)] hover-target">
+                Save Workout
+            </button>
+            <div class="w-1/3 h-1 bg-white/30 rounded-full mx-auto mt-3"></div>
+        </div>
+
+        <!-- Workout Details Modal -->
+        <div id="workoutModal" style="display: none;" class="absolute inset-0 z-[999] justify-center items-center p-6">
+            <div class="absolute inset-0 bg-black/70 backdrop-blur-[2px]" onclick="document.getElementById('workoutModal').style.display='none'"></div>
+            <div class="bg-card w-full max-h-[80%] overflow-y-auto rounded-3xl p-6 relative z-10 shadow-2xl border border-gray-800 no-scrollbar hover-target">
+                <div class="flex justify-between items-start mb-3 hover-target">
+                    <div>
+                        <h3 id="modalWorkoutTitle" class="text-lg font-bold text-white hover-target">Workout Details</h3>
+                        <p id="modalWorkoutDate" class="text-xs text-textSecondary mt-0.5 hover-target"></p>
+                    </div>
+                    <button onclick="document.getElementById('workoutModal').style.display='none'" class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center hover:bg-gray-700 transition-colors hover-target">
+                        <i class="ph ph-x text-white"></i>
+                    </button>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-2 mb-4 text-xs text-textSecondary hover-target">
+                    <span id="modalWorkoutRoutine" class="flex items-center space-x-1 text-white bg-[#15161a] px-2.5 py-1 rounded-lg hover-target">
+                        <i class="ph ph-lightning"></i>
+                        <span>Routine</span>
+                    </span>
+                    <span id="modalWorkoutDuration" class="flex items-center space-x-1 text-gray-300 bg-[#15161a] px-2.5 py-1 rounded-lg hover-target">
+                        <i class="ph ph-timer"></i>
+                        <span id="modalWorkoutDurationText">30 min</span>
+                    </span>
+                    <span id="modalWorkoutRest" class="flex items-center space-x-1 text-amber-300 bg-[#15161a] px-2.5 py-1 rounded-lg hover-target">
+                        <i class="ph-fill ph-hourglass-simple text-amber-400"></i>
+                        <span>Rest: <span id="modalWorkoutRestText">8 min</span></span>
+                    </span>
+                    <span id="modalWorkoutVolume" class="flex items-center space-x-1 text-gray-300 bg-[#15161a] px-2.5 py-1 rounded-lg hover-target">
+                        <i class="ph ph-barbell"></i>
+                        <span>Exercises</span>
+                    </span>
+                </div>
+
+                <div id="modalExercisesList" class="space-y-2 mb-4 hover-target"></div>
+
+                <div id="modalNotesContainer" class="bg-[#15161a] rounded-2xl p-4 hidden hover-target">
+                    <p class="text-xs text-textSecondary mb-1 font-semibold hover-target">Notes</p>
+                    <p id="modalWorkoutNotes" class="text-sm text-gray-300 whitespace-pre-wrap hover-target"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Routine Management Modal -->
+        <div id="routineModal" style="display: none;" class="absolute inset-0 z-[999] justify-center items-center p-6">
+            <div class="absolute inset-0 bg-black/70 backdrop-blur-[2px]" onclick="closeRoutineModal()"></div>
+            <div class="bg-card w-full max-h-[85%] overflow-y-auto rounded-3xl p-6 relative z-10 shadow-2xl border border-gray-800 no-scrollbar space-y-4 hover-target">
+                <div class="flex justify-between items-center hover-target">
+                    <div>
+                        <h3 class="text-lg font-bold text-white hover-target">Edit Routines</h3>
+                        <p class="text-xs text-textSecondary hover-target">Manage your workout splits</p>
+                    </div>
+                    <button onclick="closeRoutineModal()" class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center hover:bg-gray-700 transition-colors hover-target">
+                        <i class="ph ph-x text-white"></i>
+                    </button>
+                </div>
+
+                <!-- Add New Routine Input -->
+                <div class="flex space-x-2 hover-target">
+                    <input id="newRoutineInput" type="text" class="flex-1 bg-[#15161a] border border-gray-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-gray-600 hover-target">
+                    <button type="button" onclick="addNewRoutine()" class="px-4 py-2 bg-white text-black font-semibold text-xs rounded-xl hover:bg-gray-200 transition-colors hover-target">
+                        + Add
+                    </button>
+                </div>
+
+                <!-- Routines List -->
+                <div class="space-y-2 hover-target">
+                    <label class="text-[11px] text-textSecondary uppercase tracking-wider font-semibold hover-target">Active Splits</label>
+                    <div id="routineEditList" class="space-y-2">
+                        <!-- Routines with edit/delete buttons -->
+                    </div>
+                </div>
+
+                <div class="pt-2 hover-target">
+                    <button type="button" onclick="closeRoutineModal()" class="w-full bg-card hover:bg-cardHover border border-gray-700 text-white font-semibold rounded-xl py-2.5 text-xs transition-colors hover-target">
+                        Done
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exercise Type Selector & Name Modal -->
+        <div id="exerciseTypeModal" style="display: none;" class="absolute inset-0 z-[999] justify-center items-center p-6">
+            <div class="absolute inset-0 bg-black/75 backdrop-blur-[2px]" onclick="closeExerciseTypeModal()"></div>
+            <div class="bg-card w-full max-h-[85%] overflow-y-auto rounded-3xl p-6 relative z-10 shadow-2xl border border-gray-800 no-scrollbar space-y-4 hover-target">
+                
+                <!-- STEP 1: Select Type -->
+                <div id="exerciseTypeStep1" class="space-y-4">
+                    <div class="flex justify-between items-start hover-target">
+                        <div>
+                            <h3 class="text-lg font-bold text-white hover-target">Add Exercise</h3>
+                            <p class="text-xs text-textSecondary hover-target">Which type of exercise are you doing?</p>
+                        </div>
+                        <button onclick="closeExerciseTypeModal()" class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center hover:bg-gray-700 transition-colors hover-target">
+                            <i class="ph ph-x text-white"></i>
+                        </button>
+                    </div>
+
+                    <div class="space-y-2.5 pt-1">
+                        <!-- Weighted Option -->
+                        <button type="button" onclick="selectExerciseType('weighted')" class="w-full bg-[#15161a] hover:bg-[#1f2026] border border-gray-800/80 hover:border-blue-500/50 rounded-2xl p-4 text-left flex items-center space-x-3.5 transition-all group hover-target">
+                            <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex justify-center items-center group-hover:scale-105 transition-transform hover-target">
+                                <i class="ph ph-barbell text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-bold text-sm text-white group-hover:text-blue-300 transition-colors hover-target">Weighted</div>
+                                <div class="text-[11px] text-textSecondary hover-target">Barbell, Dumbbells, Machines (kg & reps)</div>
+                            </div>
+                            <i class="ph ph-caret-right text-gray-600 group-hover:text-white transition-colors"></i>
+                        </button>
+
+                        <!-- Bodyweight Option -->
+                        <button type="button" onclick="selectExerciseType('bodyweight')" class="w-full bg-[#15161a] hover:bg-[#1f2026] border border-gray-800/80 hover:border-emerald-500/50 rounded-2xl p-4 text-left flex items-center space-x-3.5 transition-all group hover-target">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex justify-center items-center group-hover:scale-105 transition-transform hover-target">
+                                <i class="ph ph-person-simple-walk text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-bold text-sm text-white group-hover:text-emerald-300 transition-colors hover-target">Bodyweight</div>
+                                <div class="text-[11px] text-textSecondary hover-target">Push-ups, Pull-ups, Dips, Core (reps only)</div>
+                            </div>
+                            <i class="ph ph-caret-right text-gray-600 group-hover:text-white transition-colors"></i>
+                        </button>
+
+                        <!-- Mix Option -->
+                        <button type="button" onclick="selectExerciseType('mix')" class="w-full bg-[#15161a] hover:bg-[#1f2026] border border-gray-800/80 hover:border-purple-500/50 rounded-2xl p-4 text-left flex items-center space-x-3.5 transition-all group hover-target">
+                            <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex justify-center items-center group-hover:scale-105 transition-transform hover-target">
+                                <i class="ph ph-lightning text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-bold text-sm text-white group-hover:text-purple-300 transition-colors hover-target">Mix (Weighted Bodyweight)</div>
+                                <div class="text-[11px] text-textSecondary hover-target">Calisthenics with extra weight (+kg & reps)</div>
+                            </div>
+                            <i class="ph ph-caret-right text-gray-600 group-hover:text-white transition-colors"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Enter Exercise Name -->
+                <div id="exerciseTypeStep2" style="display: none;" class="space-y-4">
+                    <div class="flex justify-between items-center hover-target">
+                        <button type="button" onclick="goBackToExerciseTypes()" class="flex items-center space-x-1 text-xs text-textSecondary hover:text-white transition-colors hover-target">
+                            <i class="ph ph-arrow-left"></i>
+                            <span>Back</span>
+                        </button>
+                        <button onclick="closeExerciseTypeModal()" class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center hover:bg-gray-700 transition-colors hover-target">
+                            <i class="ph ph-x text-white"></i>
+                        </button>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center space-x-2 mb-1">
+                            <h3 class="text-lg font-bold text-white hover-target">Exercise Name</h3>
+                            <span id="modalSelectedCatBadge" class="text-[10px] bg-white/10 text-gray-300 px-2 py-0.5 rounded-full font-medium"></span>
+                        </div>
+                        <p class="text-xs text-textSecondary hover-target">What is the name of this exercise?</p>
+                    </div>
+
+                    <!-- Input form -->
+                    <form onsubmit="event.preventDefault(); confirmAddExerciseWithName();" class="space-y-4">
+                        <div class="space-y-1.5 hover-target">
+                            <input id="exerciseNameInputModal" type="text" class="w-full bg-[#15161a] border border-gray-700 focus:border-white rounded-2xl px-4 py-3.5 text-sm text-white focus:outline-none transition-all hover-target" autocomplete="off">
+                        </div>
+
+                        <div class="pt-1 hover-target">
+                            <button type="submit" class="w-full bg-white text-black font-semibold rounded-2xl py-3.5 text-sm hover:bg-gray-200 transition-transform active:scale-[0.98] shadow-lg flex items-center justify-center space-x-1.5 hover-target">
+                                <i class="ph ph-plus font-bold"></i>
+                                <span>Add Exercise</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Copy / Reusable Workout Template Modal -->
+        <div id="copyWorkoutModal" style="display: none;" class="absolute inset-0 z-[999] justify-center items-center p-6">
+            <div class="absolute inset-0 bg-black/75 backdrop-blur-[2px]" onclick="closeCopyWorkoutModal()"></div>
+            <div class="bg-card w-full max-h-[85%] overflow-y-auto rounded-3xl p-6 relative z-10 shadow-2xl border border-gray-800 no-scrollbar space-y-4 hover-target">
+                <!-- Header -->
+                <div class="flex justify-between items-start hover-target">
+                    <div>
+                        <h3 class="text-lg font-bold text-white hover-target">Copy Workout</h3>
+                        <p class="text-xs text-textSecondary hover-target">Save or reuse your workout routine</p>
+                    </div>
+                    <button onclick="closeCopyWorkoutModal()" class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center hover:bg-gray-700 transition-colors text-white hover-target">
+                        <i class="ph ph-x"></i>
+                    </button>
+                </div>
+
+                <!-- Quick Actions List -->
+                <div class="space-y-2.5 pt-1">
+                    <!-- Save as Reusable Template -->
+                    <button type="button" onclick="saveCurrentWorkoutAsTemplate()" class="w-full bg-[#15161a] hover:bg-[#1f2026] border border-gray-800/80 hover:border-blue-500/50 rounded-2xl p-4 text-left flex items-center space-x-3.5 transition-all group hover-target">
+                        <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex justify-center items-center group-hover:scale-105 transition-transform hover-target">
+                            <i class="ph ph-bookmarks-simple text-xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-bold text-sm text-white group-hover:text-blue-300 transition-colors hover-target">Save as Reusable Template</div>
+                            <div class="text-[11px] text-textSecondary hover-target">Save this workout setup to load anytime with 1 click</div>
+                        </div>
+                        <i class="ph ph-caret-right text-gray-600 group-hover:text-white transition-colors"></i>
+                    </button>
+
+                    <!-- Duplicate Current Session -->
+                    <button type="button" onclick="duplicateCurrentWorkout()" class="w-full bg-[#15161a] hover:bg-[#1f2026] border border-gray-800/80 hover:border-emerald-500/50 rounded-2xl p-4 text-left flex items-center space-x-3.5 transition-all group hover-target">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex justify-center items-center group-hover:scale-105 transition-transform hover-target">
+                            <i class="ph ph-copy text-xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-bold text-sm text-white group-hover:text-emerald-300 transition-colors hover-target">Duplicate to New Session</div>
+                            <div class="text-[11px] text-textSecondary hover-target">Clone all exercises & sets into a fresh session for today</div>
+                        </div>
+                        <i class="ph ph-caret-right text-gray-600 group-hover:text-white transition-colors"></i>
+                    </button>
+
+                    <!-- Copy to Clipboard (Text Summary) -->
+                    <button type="button" onclick="copyWorkoutTextSummary()" class="w-full bg-[#15161a] hover:bg-[#1f2026] border border-gray-800/80 hover:border-purple-500/50 rounded-2xl p-4 text-left flex items-center space-x-3.5 transition-all group hover-target">
+                        <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex justify-center items-center group-hover:scale-105 transition-transform hover-target">
+                            <i class="ph ph-share-network text-xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-bold text-sm text-white group-hover:text-purple-300 transition-colors hover-target">Copy Workout Summary (Text)</div>
+                            <div class="text-[11px] text-textSecondary hover-target">Copy text with exercises, weights & reps to clipboard</div>
+                        </div>
+                        <i class="ph ph-caret-right text-gray-600 group-hover:text-white transition-colors"></i>
+                    </button>
+                </div>
+
+                <!-- Saved Reusable Templates List Section -->
+                <div class="space-y-2 pt-2 border-t border-gray-800/80 hover-target">
+                    <label class="text-[11px] text-textSecondary uppercase tracking-wider font-semibold hover-target">Saved Templates</label>
+                    <div id="workoutTemplatesList" class="space-y-2 max-h-40 overflow-y-auto no-scrollbar hover-target">
+                        <!-- Dynamic saved templates -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Set Prompt Modal -->
+        <div id="addSetModal" style="display: none;" class="absolute inset-0 z-[1000] justify-center items-center p-6">
+            <div class="absolute inset-0 bg-black/75 backdrop-blur-[2px]" onclick="closeAddSetModal()"></div>
+            <div class="bg-card w-full max-h-[85%] overflow-y-auto rounded-3xl p-6 relative z-10 shadow-2xl border border-gray-800 no-scrollbar space-y-4 hover-target">
+                <!-- Header -->
+                <div class="flex justify-between items-start hover-target">
+                    <div>
+                        <h3 id="addSetModalTitle" class="text-lg font-bold text-white hover-target">Add Set</h3>
+                        <p id="addSetModalSubtitle" class="text-xs text-textSecondary hover-target">Enter weight and reps</p>
+                    </div>
+                    <button onclick="closeAddSetModal()" class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center hover:bg-gray-700 transition-colors text-white hover-target">
+                        <i class="ph ph-x"></i>
+                    </button>
+                </div>
+
+                <!-- Form -->
+                <form id="addSetForm" onsubmit="event.preventDefault(); confirmAddNewSet();" class="space-y-4">
+                    <!-- Weight Input (only for weighted & mix) -->
+                    <div id="addSetWeightGroup" class="space-y-1.5 hover-target">
+                        <label id="addSetWeightLabel" class="text-xs text-textSecondary font-semibold uppercase tracking-wider block hover-target">Weight (kg)</label>
+                        <div class="flex items-center bg-[#15161a] border border-gray-700 focus-within:border-white rounded-2xl px-4 py-3 hover-target">
+                            <span id="addSetWeightPrefix" class="text-textSecondary font-bold text-base mr-1 hidden">+</span>
+                            <input id="addSetWeightInput" type="number" step="0.5" min="0" class="w-full bg-transparent text-white font-bold text-base focus:outline-none hover-target" autocomplete="off">
+                            <span class="text-xs text-textSecondary font-medium">kg</span>
+                        </div>
+                    </div>
+
+                    <!-- Reps Input (for all types) -->
+                    <div id="addSetRepsGroup" class="space-y-1.5 hover-target">
+                        <label class="text-xs text-textSecondary font-semibold uppercase tracking-wider block hover-target">Reps</label>
+                        <div class="flex items-center bg-[#15161a] border border-gray-700 focus-within:border-white rounded-2xl px-4 py-3 hover-target">
+                            <input id="addSetRepsInput" type="number" step="1" min="1" class="w-full bg-transparent text-white font-bold text-base focus:outline-none hover-target" autocomplete="off">
+                            <span class="text-xs text-textSecondary font-medium">reps</span>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-2 hover-target">
+                        <button type="submit" class="w-full bg-white text-black font-semibold rounded-2xl py-3.5 text-sm hover:bg-gray-200 transition-transform active:scale-[0.98] shadow-lg flex items-center justify-center space-x-1.5 hover-target">
+                            <i class="ph ph-plus font-bold"></i>
+                            <span id="addSetSubmitText">Log Set</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Script -->
+    <script>
+        let currentCategoryFilter = 'all';
+        let selectedRoutine = 'Chest + Tricep';
+        let exercises = [];
+
+        // Elapsed Session Timer
+        let elapsedSeconds = 0;
+        let isElapsedRunning = true;
+        let elapsedInterval = null;
+
+        function startElapsedTimer() {
+            if (elapsedInterval) clearInterval(elapsedInterval);
+            elapsedInterval = setInterval(() => {
+                if (isElapsedRunning) {
+                    elapsedSeconds++;
+                    updateElapsedDisplay();
+                }
+            }, 1000);
+        }
+
+        function updateElapsedDisplay() {
+            const el = document.getElementById('elapsedTimerDisplay');
+            if (!el) return;
+            const m = Math.floor(elapsedSeconds / 60);
+            const s = elapsedSeconds % 60;
+            const h = Math.floor(m / 60);
+            if (h > 0) {
+                el.textContent = `${String(h).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            } else {
+                el.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            }
+        }
+
+        window.toggleElapsedTimer = function() {
+            isElapsedRunning = !isElapsedRunning;
+            const icon = document.getElementById('elapsedPlayIcon');
+            const txt = document.getElementById('elapsedPlayText');
+            if (icon && txt) {
+                if (isElapsedRunning) {
+                    icon.className = 'ph-fill ph-pause';
+                    txt.textContent = 'Pause';
+                } else {
+                    icon.className = 'ph-fill ph-play';
+                    txt.textContent = 'Resume';
+                }
+            }
+        };
+
+        window.resetElapsedTimer = function() {
+            elapsedSeconds = 0;
+            updateElapsedDisplay();
+        };
+
+        // Rest Stopwatch & Countdown Timer
+        let restSeconds = 0;
+        let totalRestSeconds = 0;
+        let isRestRunning = false;
+        let restInterval = null;
+        let isCountdown = false;
+
+        function updateRestDisplay() {
+            const el = document.getElementById('restTimerDisplay');
+            if (!el) return;
+            const m = Math.floor(restSeconds / 60);
+            const s = restSeconds % 60;
+            el.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        window.toggleRestTimer = function() {
+            isRestRunning = !isRestRunning;
+            const icon = document.getElementById('restPlayIcon');
+            const txt = document.getElementById('restPlayText');
+            if (isRestRunning) {
+                if (icon && txt) {
+                    icon.className = 'ph-fill ph-pause';
+                    txt.textContent = 'Pause';
+                }
+                if (restInterval) clearInterval(restInterval);
+                restInterval = setInterval(() => {
+                    if (!isRestRunning) return;
+                    totalRestSeconds++;
+                    if (isCountdown) {
+                        if (restSeconds > 0) {
+                            restSeconds--;
+                            updateRestDisplay();
+                            if (restSeconds === 0) {
+                                isRestRunning = false;
+                                clearInterval(restInterval);
+                                showToast('Rest time is up! Ready for next set 💪');
+                                if (icon && txt) {
+                                    icon.className = 'ph-fill ph-play';
+                                    txt.textContent = 'Start';
+                                }
+                            }
+                        }
+                    } else {
+                        restSeconds++;
+                        updateRestDisplay();
+                    }
+                }, 1000);
+            } else {
+                if (icon && txt) {
+                    icon.className = 'ph-fill ph-play';
+                    txt.textContent = 'Resume';
+                }
+                if (restInterval) clearInterval(restInterval);
+            }
+        };
+
+        window.resetRestTimer = function() {
+            isRestRunning = false;
+            isCountdown = false;
+            if (restInterval) clearInterval(restInterval);
+            restSeconds = 0;
+            updateRestDisplay();
+            const icon = document.getElementById('restPlayIcon');
+            const txt = document.getElementById('restPlayText');
+            if (icon && txt) {
+                icon.className = 'ph-fill ph-play';
+                txt.textContent = 'Start';
+            }
+        };
+
+        window.startRestCountdown = function(seconds) {
+            restSeconds = seconds;
+            isCountdown = true;
+            isRestRunning = true;
+            updateRestDisplay();
+            const icon = document.getElementById('restPlayIcon');
+            const txt = document.getElementById('restPlayText');
+            if (icon && txt) {
+                icon.className = 'ph-fill ph-pause';
+                txt.textContent = 'Pause';
+            }
+            if (restInterval) clearInterval(restInterval);
+            restInterval = setInterval(() => {
+                if (!isRestRunning) return;
+                totalRestSeconds++;
+                if (restSeconds > 0) {
+                    restSeconds--;
+                    updateRestDisplay();
+                    if (restSeconds === 0) {
+                        isRestRunning = false;
+                        clearInterval(restInterval);
+                        showToast('Rest time is up! Ready for next set 💪');
+                        if (icon && txt) {
+                            icon.className = 'ph-fill ph-play';
+                            txt.textContent = 'Start';
+                        }
+                    }
+                }
+            }, 1000);
+        };
+
+        startElapsedTimer();
+
+        function setCategoryFilter(cat) {
+            currentCategoryFilter = cat;
+            document.querySelectorAll('.category-tab').forEach(t => {
+                t.className = 'category-tab flex-1 py-1.5 text-center rounded-xl text-xs font-semibold text-textSecondary hover:text-white transition-all hover-target';
+            });
+            const activeTab = document.getElementById(`tab-${cat}`);
+            if (activeTab) {
+                activeTab.className = 'category-tab flex-1 py-1.5 text-center rounded-xl text-xs font-semibold bg-white text-black transition-all hover-target';
+            }
+            renderExercises();
+        }
+
+        // Routines Management
+        let routines = JSON.parse(localStorage.getItem('workout_saved_routines') || 'null') || [
+            'Chest + Tricep', 'Back + Bicep', 'Legs + Core', 'Full Body', 'Shoulders + Arms'
+        ];
+
+        function saveRoutines() {
+            localStorage.setItem('workout_saved_routines', JSON.stringify(routines));
+            renderRoutinePills();
+            renderRoutineEditList();
+        }
+
+        function renderRoutinePills() {
+            const container = document.getElementById('routinePillsContainer');
+            if (!container) return;
+            let html = '';
+            routines.forEach(r => {
+                const isActive = r === selectedRoutine;
+                html += `
+                    <button type="button" onclick="selectRoutine('${r}')" class="routine-pill px-4 py-2 rounded-full font-semibold text-xs whitespace-nowrap hover-target transition-all ${isActive ? 'bg-white text-black' : 'bg-card text-textSecondary hover:text-white'}" data-value="${r}">
+                        ${r}
+                    </button>
+                `;
+            });
+            container.innerHTML = html;
+            if (window.refreshHoverTargets) refreshHoverTargets();
+        }
+
+        function selectRoutine(r) {
+            selectedRoutine = r;
+            document.getElementById('workoutTitleInput').value = `${selectedRoutine} Session`;
+            renderRoutinePills();
+        }
+
+        function renderRoutineEditList() {
+            const list = document.getElementById('routineEditList');
+            if (!list) return;
+            let html = '';
+            routines.forEach((r, idx) => {
+                html += `
+                    <div class="flex items-center justify-between bg-[#15161a] rounded-xl px-3 py-2 border border-gray-800/60">
+                        <input type="text" value="${r}" onchange="updateRoutineName(${idx}, this.value)" class="bg-transparent font-medium text-xs text-white focus:outline-none flex-1">
+                        <button type="button" onclick="deleteRoutine(${idx})" class="text-gray-600 hover:text-red-500 p-1 transition-colors">
+                            <i class="ph ph-trash text-sm"></i>
+                        </button>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+
+        function addNewRoutine() {
+            const input = document.getElementById('newRoutineInput');
+            const val = input.value.trim();
+            if (!val) return;
+            if (!routines.includes(val)) {
+                routines.push(val);
+                saveRoutines();
+                selectRoutine(val);
+            }
+            input.value = '';
+        }
+
+        function updateRoutineName(idx, val) {
+            const clean = val.trim();
+            if (!clean) return;
+            const old = routines[idx];
+            routines[idx] = clean;
+            if (selectedRoutine === old) selectedRoutine = clean;
+            saveRoutines();
+        }
+
+        function deleteRoutine(idx) {
+            if (routines.length <= 1) return;
+            const removed = routines.splice(idx, 1)[0];
+            if (selectedRoutine === removed) selectedRoutine = routines[0];
+            saveRoutines();
+        }
+
+        function openRoutineModal() {
+            renderRoutineEditList();
+            document.getElementById('routineModal').style.display = 'flex';
+            setTimeout(refreshHoverTargets, 10);
+        }
+
+        function closeRoutineModal() {
+            document.getElementById('routineModal').style.display = 'none';
+            setTimeout(refreshHoverTargets, 10);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderRoutinePills();
+            document.getElementById('btnEditRoutines').addEventListener('click', openRoutineModal);
+
+            // Date setup
+            const dateInput = document.getElementById('workoutDateInput');
+            const dateDisplay = document.getElementById('workoutDateDisplay');
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            dateInput.value = now.toISOString().slice(0, 16);
+
+            function updateDateDisplay() {
+                const d = new Date(dateInput.value);
+                dateDisplay.textContent = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+            }
+            updateDateDisplay();
+            dateInput.addEventListener('change', updateDateDisplay);
+
+            // Render Exercise List
+            window.renderExercises = function() {
+                const container = document.getElementById('exerciseList');
+                let filtered = exercises.map((ex, idx) => ({ ...ex, originalIndex: idx }));
+                
+                if (currentCategoryFilter !== 'all') {
+                    filtered = filtered.filter(ex => ex.category === currentCategoryFilter);
+                }
+
+                if (filtered.length === 0) {
+                    container.innerHTML = `
+                        <div class="bg-card/40 rounded-3xl p-8 text-center text-textSecondary space-y-3 border border-dashed border-gray-800">
+                            <div class="w-12 h-12 rounded-full bg-gray-800/80 text-white flex items-center justify-center mx-auto text-xl">
+                                <i class="ph ph-barbell"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-white">No ${currentCategoryFilter === 'all' ? '' : currentCategoryFilter + ' '}exercises added yet</p>
+                                <p class="text-xs text-textSecondary mt-1">Tap below to add what you're performing</p>
+                            </div>
+                            <button onclick="openExerciseTypeModal()" class="text-xs font-semibold text-black bg-white hover:bg-gray-200 px-4 py-2 rounded-xl transition-all inline-flex items-center space-x-1.5 shadow-sm">
+                                <i class="ph ph-plus font-bold"></i>
+                                <span>Add Exercise</span>
+                            </button>
+                        </div>
+                    `;
+                    refreshHoverTargets();
+                    return;
+                }
+
+                let html = '';
+                filtered.forEach((ex) => {
+                    const exIdx = ex.originalIndex;
+                    const isWeighted = ex.category === 'weighted';
+                    const isBW = ex.category === 'bodyweight';
+                    const isMix = ex.category === 'mix';
+
+                    const weightColHeader = isWeighted ? 'WEIGHT (KG)' : (isBW ? 'TYPE' : 'EXTRA (+KG)');
+
+                    html += `
+                    <div class="bg-card rounded-2xl p-4 space-y-3 hover-target relative border border-gray-800/60 transition-all">
+                        <div class="flex justify-between items-center gap-2">
+                            <div class="flex-1">
+                                <input id="ex-input-${exIdx}" type="text" value="${ex.name}" onchange="updateExerciseName(${exIdx}, this.value)" class="bg-transparent font-semibold text-sm text-white focus:outline-none w-full hover-target">
+                            </div>
+                            <button type="button" onclick="removeExercise(${exIdx})" class="text-gray-600 hover:text-red-500 transition-colors p-1" title="Delete Exercise">
+                                <i class="ph ph-trash text-base"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="space-y-1.5 pt-1">
+                            ${ex.sets.length === 0 ? `
+                                <div class="py-3 text-center text-xs text-textSecondary bg-[#15161a] rounded-xl border border-dashed border-gray-800/80 hover-target">
+                                    No sets logged yet. Click "+ Add Set" below.
+                                </div>
+                            ` : (isBW ? `
+                                <div class="grid grid-cols-12 text-[10px] text-textSecondary px-2 font-semibold uppercase tracking-wider">
+                                    <span class="col-span-3">SET</span>
+                                    <span class="col-span-7">REPS (BODYWEIGHT)</span>
+                                    <span class="col-span-2 text-right">ACTION</span>
+                                </div>
+                                ${ex.sets.map((set, setIdx) => `
+                                    <div class="grid grid-cols-12 items-center bg-[#15161a] rounded-xl px-3 py-2 text-xs text-white hover-target">
+                                        <span class="col-span-3 font-semibold text-textSecondary text-[11px]">Set ${setIdx + 1}</span>
+                                        <div class="col-span-7 flex items-center space-x-1.5">
+                                            <span class="font-bold text-white text-sm">${set.reps}</span>
+                                            <span class="text-xs text-textSecondary">reps</span>
+                                        </div>
+                                        <div class="col-span-2 flex justify-end items-center space-x-1">
+                                            <button type="button" onclick="openAddSetModal(${exIdx}, ${setIdx})" class="text-gray-500 hover:text-white transition-colors p-1" title="Edit Set">
+                                                <i class="ph ph-pencil-simple text-xs"></i>
+                                            </button>
+                                            <button type="button" onclick="removeSet(${exIdx}, ${setIdx})" class="text-gray-500 hover:text-red-400 transition-colors p-1" title="Remove Set">
+                                                <i class="ph ph-x text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            ` : (isMix ? `
+                                <div class="grid grid-cols-12 text-[10px] text-textSecondary px-2 font-semibold uppercase tracking-wider">
+                                    <span class="col-span-2">SET</span>
+                                    <span class="col-span-5">+ WEIGHT (KG)</span>
+                                    <span class="col-span-3">REPS</span>
+                                    <span class="col-span-2 text-right">ACTION</span>
+                                </div>
+                                ${ex.sets.map((set, setIdx) => `
+                                    <div class="grid grid-cols-12 items-center bg-[#15161a] rounded-xl px-2.5 py-2 text-xs text-white hover-target">
+                                        <span class="col-span-2 font-semibold text-textSecondary text-[11px]">Set ${setIdx + 1}</span>
+                                        <div class="col-span-5 flex items-center space-x-1">
+                                            <span class="text-xs text-textSecondary font-semibold">+</span>
+                                            <span class="font-bold text-white text-xs">${(set.weight || '').replace('+','') || '0'}</span>
+                                            <span class="text-[10px] text-textSecondary">kg</span>
+                                        </div>
+                                        <div class="col-span-3 flex items-center space-x-1">
+                                            <span class="font-bold text-white text-xs">${set.reps}</span>
+                                            <span class="text-[10px] text-textSecondary">reps</span>
+                                        </div>
+                                        <div class="col-span-2 flex justify-end items-center space-x-1">
+                                            <button type="button" onclick="openAddSetModal(${exIdx}, ${setIdx})" class="text-gray-500 hover:text-white transition-colors p-1" title="Edit Set">
+                                                <i class="ph ph-pencil-simple text-xs"></i>
+                                            </button>
+                                            <button type="button" onclick="removeSet(${exIdx}, ${setIdx})" class="text-gray-500 hover:text-red-400 transition-colors p-1" title="Remove Set">
+                                                <i class="ph ph-x text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            ` : `
+                                <div class="grid grid-cols-12 text-[10px] text-textSecondary px-2 font-semibold uppercase tracking-wider">
+                                    <span class="col-span-2">SET</span>
+                                    <span class="col-span-5">WEIGHT (KG)</span>
+                                    <span class="col-span-3">REPS</span>
+                                    <span class="col-span-2 text-right">ACTION</span>
+                                </div>
+                                ${ex.sets.map((set, setIdx) => `
+                                    <div class="grid grid-cols-12 items-center bg-[#15161a] rounded-xl px-2.5 py-2 text-xs text-white hover-target">
+                                        <span class="col-span-2 font-semibold text-textSecondary text-[11px]">Set ${setIdx + 1}</span>
+                                        <div class="col-span-5 flex items-center space-x-1">
+                                            <span class="font-bold text-white text-xs">${set.weight || '0'}</span>
+                                            <span class="text-[10px] text-textSecondary">kg</span>
+                                        </div>
+                                        <div class="col-span-3 flex items-center space-x-1">
+                                            <span class="font-bold text-white text-xs">${set.reps}</span>
+                                            <span class="text-[10px] text-textSecondary">reps</span>
+                                        </div>
+                                        <div class="col-span-2 flex justify-end items-center space-x-1">
+                                            <button type="button" onclick="openAddSetModal(${exIdx}, ${setIdx})" class="text-gray-500 hover:text-white transition-colors p-1" title="Edit Set">
+                                                <i class="ph ph-pencil-simple text-xs"></i>
+                                            </button>
+                                            <button type="button" onclick="removeSet(${exIdx}, ${setIdx})" class="text-gray-500 hover:text-red-400 transition-colors p-1" title="Remove Set">
+                                                <i class="ph ph-x text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            `))}
+                        </div>
+
+                        <button type="button" onclick="addSet(${exIdx})" class="w-full py-2 bg-[#15161a]/80 hover:bg-[#15161a] text-xs font-semibold text-textSecondary hover:text-white rounded-xl transition-colors flex justify-center items-center space-x-1 hover-target">
+                            <i class="ph ph-plus text-xs"></i>
+                            <span>Add Set</span>
+                        </button>
+                    </div>
+                    `;
+                });
+                container.innerHTML = html;
+                refreshHoverTargets();
+            };
+
+            window.setExerciseCategory = (exIdx, cat) => {
+                exercises[exIdx].category = cat;
+                if (cat === 'bodyweight') {
+                    exercises[exIdx].sets.forEach(s => s.weight = 'BW');
+                } else if (cat === 'mix') {
+                    exercises[exIdx].sets.forEach(s => {
+                        if (!s.weight.startsWith('+') && s.weight !== 'BW') s.weight = '+' + s.weight;
+                        else if (s.weight === 'BW') s.weight = '+10';
+                    });
+                } else if (cat === 'weighted') {
+                    exercises[exIdx].sets.forEach(s => {
+                        s.weight = s.weight.replace('+', '').replace('BW', '20');
+                    });
+                }
+                renderExercises();
+            };
+
+            window.updateExerciseName = (exIdx, val) => { exercises[exIdx].name = val; };
+            window.removeExercise = (exIdx) => { exercises.splice(exIdx, 1); renderExercises(); };
+            window.removeSet = (exIdx, setIdx) => { 
+                exercises[exIdx].sets.splice(setIdx, 1); 
+                renderExercises(); 
+            };
+
+            let currentTargetExerciseIndex = -1;
+            let currentEditingSetIndex = -1;
+
+            window.openAddSetModal = function(exIdx, setIdx = -1) {
+                currentTargetExerciseIndex = exIdx;
+                currentEditingSetIndex = setIdx;
+                const ex = exercises[exIdx];
+                if (!ex) return;
+
+                const isBW = ex.category === 'bodyweight';
+                const isMix = ex.category === 'mix';
+
+                const setNum = setIdx >= 0 ? (setIdx + 1) : (ex.sets.length + 1);
+                document.getElementById('addSetModalTitle').textContent = setIdx >= 0 ? `Edit Set ${setNum}` : `Add Set ${setNum}`;
+                document.getElementById('addSetModalSubtitle').textContent = ex.name ? `${ex.name} (${ex.category})` : `Exercise (${ex.category})`;
+                document.getElementById('addSetSubmitText').textContent = setIdx >= 0 ? 'Save Changes' : 'Log Set';
+
+                const weightGroup = document.getElementById('addSetWeightGroup');
+                const weightLabel = document.getElementById('addSetWeightLabel');
+                const weightPrefix = document.getElementById('addSetWeightPrefix');
+                const weightInput = document.getElementById('addSetWeightInput');
+                const repsInput = document.getElementById('addSetRepsInput');
+
+                if (isBW) {
+                    weightGroup.style.display = 'none';
+                    weightPrefix.classList.add('hidden');
+                    repsInput.value = setIdx >= 0 ? ex.sets[setIdx].reps : (ex.sets.length > 0 ? ex.sets[ex.sets.length - 1].reps : '');
+                    setTimeout(() => repsInput.focus(), 50);
+                } else if (isMix) {
+                    weightGroup.style.display = 'block';
+                    weightLabel.textContent = 'Extra Weight (+kg)';
+                    weightPrefix.classList.remove('hidden');
+                    weightInput.value = setIdx >= 0 ? (ex.sets[setIdx].weight || '').replace('+', '').replace('BW', '') : (ex.sets.length > 0 ? (ex.sets[ex.sets.length - 1].weight || '').replace('+','') : '');
+                    repsInput.value = setIdx >= 0 ? ex.sets[setIdx].reps : (ex.sets.length > 0 ? ex.sets[ex.sets.length - 1].reps : '');
+                    setTimeout(() => weightInput.focus(), 50);
+                } else {
+                    weightGroup.style.display = 'block';
+                    weightLabel.textContent = 'Weight (kg)';
+                    weightPrefix.classList.add('hidden');
+                    weightInput.value = setIdx >= 0 ? ex.sets[setIdx].weight : (ex.sets.length > 0 ? ex.sets[ex.sets.length - 1].weight : '');
+                    repsInput.value = setIdx >= 0 ? ex.sets[setIdx].reps : (ex.sets.length > 0 ? ex.sets[ex.sets.length - 1].reps : '');
+                    setTimeout(() => weightInput.focus(), 50);
+                }
+
+                document.getElementById('addSetModal').style.display = 'flex';
+                setTimeout(refreshHoverTargets, 10);
+            };
+
+            window.closeAddSetModal = function() {
+                document.getElementById('addSetModal').style.display = 'none';
+                setTimeout(refreshHoverTargets, 10);
+            };
+
+            window.confirmAddNewSet = function() {
+                if (currentTargetExerciseIndex < 0 || currentTargetExerciseIndex >= exercises.length) return;
+                const ex = exercises[currentTargetExerciseIndex];
+                const isBW = ex.category === 'bodyweight';
+                const isMix = ex.category === 'mix';
+
+                const weightInput = document.getElementById('addSetWeightInput');
+                const repsInput = document.getElementById('addSetRepsInput');
+
+                const repsVal = repsInput.value.trim() || '10';
+                let weightVal = '0';
+
+                if (isBW) {
+                    weightVal = 'BW';
+                } else if (isMix) {
+                    const rawW = weightInput.value.trim() || '10';
+                    weightVal = '+' + rawW;
+                } else {
+                    weightVal = weightInput.value.trim() || '20';
+                }
+
+                const newSetObj = { weight: weightVal, reps: repsVal };
+
+                if (currentEditingSetIndex >= 0) {
+                    ex.sets[currentEditingSetIndex] = newSetObj;
+                } else {
+                    ex.sets.push(newSetObj);
+                }
+
+                closeAddSetModal();
+                renderExercises();
+            };
+
+            window.addSet = (exIdx) => {
+                openAddSetModal(exIdx, -1);
+            };
+
+            let pendingExerciseCategory = 'weighted';
+
+            window.openExerciseTypeModal = () => {
+                document.getElementById('exerciseTypeStep1').style.display = 'block';
+                document.getElementById('exerciseTypeStep2').style.display = 'none';
+                const inputEl = document.getElementById('exerciseNameInputModal');
+                if (inputEl) inputEl.value = '';
+                document.getElementById('exerciseTypeModal').style.display = 'flex';
+                setTimeout(refreshHoverTargets, 10);
+            };
+
+            window.closeExerciseTypeModal = () => {
+                document.getElementById('exerciseTypeModal').style.display = 'none';
+                setTimeout(refreshHoverTargets, 10);
+            };
+
+            window.selectExerciseType = (cat) => {
+                pendingExerciseCategory = cat;
+                const catLabels = {
+                    weighted: 'Weighted',
+                    bodyweight: 'Bodyweight',
+                    mix: 'Mix'
+                };
+                document.getElementById('modalSelectedCatBadge').textContent = catLabels[cat] || cat;
+
+                document.getElementById('exerciseTypeStep1').style.display = 'none';
+                document.getElementById('exerciseTypeStep2').style.display = 'block';
+                
+                const inputEl = document.getElementById('exerciseNameInputModal');
+                inputEl.value = '';
+                setTimeout(() => {
+                    inputEl.focus();
+                    refreshHoverTargets();
+                }, 50);
+            };
+
+            window.goBackToExerciseTypes = () => {
+                document.getElementById('exerciseTypeStep2').style.display = 'none';
+                document.getElementById('exerciseTypeStep1').style.display = 'block';
+                setTimeout(refreshHoverTargets, 10);
+            };
+
+            window.confirmAddExerciseWithName = () => {
+                const nameInput = document.getElementById('exerciseNameInputModal');
+                let name = nameInput.value.trim();
+                if (!name) {
+                    name = pendingExerciseCategory === 'bodyweight' ? 'Push-ups' : (pendingExerciseCategory === 'mix' ? 'Weighted Pull-ups' : 'Bench Press');
+                }
+                
+                closeExerciseTypeModal();
+                setCategoryFilter('all');
+                addExerciseWithCategory(pendingExerciseCategory, name);
+            };
+
+            window.addExerciseWithCategory = (cat, exerciseName = '') => {
+                const actualCat = cat === 'all' ? 'weighted' : cat;
+                const newEx = {
+                    name: exerciseName,
+                    category: actualCat,
+                    sets: [] // Empty sets: user will be prompted to log their set
+                };
+                exercises.push(newEx);
+                renderExercises();
+                
+                // Prompt for set 1 right away
+                const newIdx = exercises.length - 1;
+                openAddSetModal(newIdx, -1);
+            };
+
+            document.getElementById('btnAddExercise').addEventListener('click', () => {
+                openExerciseTypeModal();
+            });
+
+            renderExercises();
+
+            // Save Workout Handler
+            function formatSecondsToDisplay(sec) {
+                const m = Math.floor(sec / 60);
+                const s = sec % 60;
+                const h = Math.floor(m / 60);
+                if (h > 0) {
+                    return `${h}h ${m % 60}m`;
+                } else if (m > 0) {
+                    return s > 0 && m < 5 ? `${m}m ${s}s` : `${m} min`;
+                } else if (s > 0) {
+                    return `${s}s`;
+                } else {
+                    return '0s';
+                }
+            }
+
+            function saveWorkout() {
+                const m = Math.floor(elapsedSeconds / 60);
+                const s = elapsedSeconds % 60;
+                const h = Math.floor(m / 60);
+                let durationFormatted = '';
+                if (h > 0) {
+                    durationFormatted = `${h}h ${m % 60}m`;
+                } else if (m > 0) {
+                    durationFormatted = `${m} min`;
+                } else if (s > 0) {
+                    durationFormatted = `${s}s`;
+                } else {
+                    durationFormatted = '30 min';
+                }
+
+                let restFormatted = formatSecondsToDisplay(totalRestSeconds);
+                if (totalRestSeconds === 0 && elapsedSeconds > 60) {
+                    const estimatedRest = Math.round(elapsedSeconds * 0.25);
+                    restFormatted = formatSecondsToDisplay(estimatedRest);
+                } else if (totalRestSeconds === 0) {
+                    restFormatted = '0s';
+                }
+
+                const workoutData = {
+                    title: document.getElementById('workoutTitleInput').value || 'Workout',
+                    routine: selectedRoutine,
+                    date: dateInput.value,
+                    duration: durationFormatted,
+                    durationSeconds: elapsedSeconds,
+                    restDuration: restFormatted,
+                    restDurationSeconds: totalRestSeconds,
+                    notes: document.getElementById('workoutNotesInput').value,
+                    exercises: exercises,
+                    timestamp: Date.now()
+                };
+
+                let history = JSON.parse(localStorage.getItem('workout_logs_history') || '[]');
+                history.unshift(workoutData);
+                localStorage.setItem('workout_logs_history', JSON.stringify(history));
+
+                window.location.href = 'index.html';
+            }
+
+            document.getElementById('btnSaveBottom').addEventListener('click', saveWorkout);
+
+            // Toast Notification Helper
+            function showToast(msg) {
+                let toast = document.getElementById('appToast');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'appToast';
+                    toast.className = 'fixed top-16 left-1/2 transform -translate-x-1/2 z-[9999999] bg-white text-black px-4 py-2 rounded-full font-semibold text-xs shadow-2xl flex items-center space-x-2 transition-all duration-300 opacity-0 pointer-events-none';
+                    document.body.appendChild(toast);
+                }
+                toast.innerHTML = `<i class="ph-fill ph-check-circle text-base text-emerald-600"></i><span>${msg}</span>`;
+                toast.style.opacity = '1';
+                toast.style.transform = 'translate(-50%, 0)';
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translate(-50%, -10px)';
+                }, 2500);
+            }
+
+            // Copy / Template Handlers
+            window.openCopyWorkoutModal = function() {
+                renderWorkoutTemplates();
+                document.getElementById('copyWorkoutModal').style.display = 'flex';
+                setTimeout(refreshHoverTargets, 10);
+            };
+
+            window.closeCopyWorkoutModal = function() {
+                document.getElementById('copyWorkoutModal').style.display = 'none';
+                setTimeout(refreshHoverTargets, 10);
+            };
+
+            window.saveCurrentWorkoutAsTemplate = function() {
+                const title = document.getElementById('workoutTitleInput').value || 'Workout Template';
+                const template = {
+                    id: Date.now(),
+                    title: title,
+                    routine: selectedRoutine,
+                    exercises: JSON.parse(JSON.stringify(exercises)),
+                    notes: document.getElementById('workoutNotesInput').value
+                };
+                
+                let templates = JSON.parse(localStorage.getItem('workout_saved_templates') || '[]');
+                templates.unshift(template);
+                localStorage.setItem('workout_saved_templates', JSON.stringify(templates));
+                renderWorkoutTemplates();
+                showToast('Saved as reusable template!');
+                setTimeout(refreshHoverTargets, 10);
+            };
+
+            window.duplicateCurrentWorkout = function() {
+                const currentExercises = JSON.parse(JSON.stringify(exercises));
+                const title = (document.getElementById('workoutTitleInput').value || 'Workout') + ' (Copy)';
+                
+                document.getElementById('workoutTitleInput').value = title;
+                
+                // Set date to right now
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                if (dateInput) {
+                    dateInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+                    dateDisplay.textContent = 'Today, ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                }
+                
+                exercises = currentExercises;
+                renderExercises();
+                closeCopyWorkoutModal();
+                showToast('Workout duplicated to current session!');
+            };
+
+            window.copyWorkoutTextSummary = function() {
+                const title = document.getElementById('workoutTitleInput').value || 'Workout';
+                let text = `🏋️ ${title} (${selectedRoutine})\n📅 ${dateDisplay ? dateDisplay.textContent : 'Today'}\n\n`;
+                
+                if (exercises.length === 0) {
+                    text += 'No exercises logged yet.\n';
+                } else {
+                    exercises.forEach((ex, i) => {
+                        text += `${i + 1}. ${ex.name || 'Exercise'} [${ex.category}]\n`;
+                        (ex.sets || []).forEach((s, sIdx) => {
+                            if (ex.category === 'bodyweight') {
+                                text += `   Set ${sIdx + 1}: ${s.reps} reps\n`;
+                            } else if (ex.category === 'mix') {
+                                text += `   Set ${sIdx + 1}: BW +${s.weight}kg × ${s.reps} reps\n`;
+                            } else {
+                                text += `   Set ${sIdx + 1}: ${s.weight}kg × ${s.reps} reps\n`;
+                            }
+                        });
+                    });
+                }
+                
+                const notes = document.getElementById('workoutNotesInput').value;
+                if (notes) text += `\n📝 Notes: ${notes}\n`;
+                
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        showToast('Workout summary copied to clipboard!');
+                        closeCopyWorkoutModal();
+                    }).catch(() => {
+                        showToast('Workout summary copied!');
+                        closeCopyWorkoutModal();
+                    });
+                } else {
+                    showToast('Workout summary copied!');
+                    closeCopyWorkoutModal();
+                }
+            };
+
+            window.renderWorkoutTemplates = function() {
+                const templates = JSON.parse(localStorage.getItem('workout_saved_templates') || '[]');
+                const list = document.getElementById('workoutTemplatesList');
+                if (!list) return;
+
+                if (templates.length === 0) {
+                    list.innerHTML = `<p class="text-xs text-textSecondary text-center py-2">No templates saved yet. Click above to save one!</p>`;
+                    return;
+                }
+
+                let html = '';
+                templates.forEach((tpl, idx) => {
+                    const exCount = (tpl.exercises || []).length;
+                    html += `
+                    <div class="bg-[#15161a] border border-gray-800/80 rounded-xl p-3 flex justify-between items-center hover-target">
+                        <div onclick="loadWorkoutTemplate(${idx})" class="flex-1 cursor-pointer hover-target">
+                            <div class="font-bold text-xs text-white hover:text-blue-400 transition-colors">${tpl.title}</div>
+                            <div class="text-[10px] text-textSecondary mt-0.5">${tpl.routine} • ${exCount} exercises</div>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <button onclick="loadWorkoutTemplate(${idx})" class="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[11px] font-semibold transition-colors hover-target">
+                                Use
+                            </button>
+                            <button onclick="deleteWorkoutTemplate(${idx})" class="p-1 text-gray-600 hover:text-red-400 transition-colors hover-target" title="Delete template">
+                                <i class="ph ph-trash text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                    `;
+                });
+                list.innerHTML = html;
+            };
+
+            window.loadWorkoutTemplate = function(idx) {
+                const templates = JSON.parse(localStorage.getItem('workout_saved_templates') || '[]');
+                const tpl = templates[idx];
+                if (!tpl) return;
+
+                document.getElementById('workoutTitleInput').value = tpl.title;
+                if (tpl.routine) {
+                    selectRoutine(tpl.routine);
+                }
+                exercises = JSON.parse(JSON.stringify(tpl.exercises || []));
+                if (tpl.notes) {
+                    document.getElementById('workoutNotesInput').value = tpl.notes;
+                }
+                renderExercises();
+                closeCopyWorkoutModal();
+                showToast(`Loaded "${tpl.title}" template!`);
+            };
+
+            window.deleteWorkoutTemplate = function(idx) {
+                let templates = JSON.parse(localStorage.getItem('workout_saved_templates') || '[]');
+                templates.splice(idx, 1);
+                localStorage.setItem('workout_saved_templates', JSON.stringify(templates));
+                renderWorkoutTemplates();
+                setTimeout(refreshHoverTargets, 10);
+            };
+
+            // History rendering
+            function renderWorkoutHistory() {
+                const history = JSON.parse(localStorage.getItem('workout_logs_history') || '[]');
+                const list = document.getElementById('workoutHistoryList');
+                if (history.length === 0) {
+                    list.innerHTML = '<p class="text-textSecondary text-sm text-center py-4">No workout records yet.</p>';
+                    return;
+                }
+
+                let html = '';
+                history.forEach((item, index) => {
+                    const dateObj = new Date(item.date || item.timestamp);
+                    const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    const timeStr = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                    const exCount = (item.exercises || []).length;
+                    const durationStr = item.duration || '30 min';
+                    const restStr = item.restDuration || '8 min';
+
+                    html += `
+                    <div class="workout-history-item bg-card rounded-2xl p-4 flex justify-between items-center hover-target cursor-pointer hover:bg-cardHover transition-colors" data-index="${index}">
+                        <div>
+                            <div class="font-bold text-base text-white">${item.title}</div>
+                            <div class="text-xs text-textSecondary mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                <span>${dateStr}</span>
+                                <span>•</span>
+                                <span class="flex items-center text-gray-300"><i class="ph ph-timer text-xs mr-1"></i>${durationStr}</span>
+                                <span>•</span>
+                                <span class="flex items-center text-amber-400/90"><i class="ph-fill ph-hourglass-simple text-xs mr-1"></i>Rest: ${restStr}</span>
+                                <span>•</span>
+                                <span>${exCount} exercises</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <button data-index="${index}" class="delete-workout-btn text-gray-600 hover:text-red-500 transition-colors p-1" title="Delete Workout">
+                                <i class="ph ph-trash text-lg pointer-events-none"></i>
+                            </button>
+                        </div>
+                    </div>
+                    `;
+                });
+                list.innerHTML = html;
+                refreshHoverTargets();
+            }
+            renderWorkoutHistory();
+
+            // History click delegation
+            document.getElementById('workoutHistoryList').addEventListener('click', (e) => {
+                const delBtn = e.target.closest('.delete-workout-btn');
+                if (delBtn) {
+                    e.stopPropagation();
+                    let history = JSON.parse(localStorage.getItem('workout_logs_history') || '[]');
+                    history.splice(parseInt(delBtn.dataset.index, 10), 1);
+                    localStorage.setItem('workout_logs_history', JSON.stringify(history));
+                    renderWorkoutHistory();
+                    return;
+                }
+
+                const item = e.target.closest('.workout-history-item');
+                if (item) {
+                    const history = JSON.parse(localStorage.getItem('workout_logs_history') || '[]');
+                    const log = history[item.dataset.index];
+                    if (!log) return;
+
+                    document.getElementById('modalWorkoutTitle').textContent = log.title;
+                    const dateObj = new Date(log.date || log.timestamp);
+                    document.getElementById('modalWorkoutDate').textContent = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+                    document.getElementById('modalWorkoutRoutine').innerHTML = `<i class="ph ph-lightning"></i><span>${log.routine || 'Workout'}</span>`;
+                    document.getElementById('modalWorkoutDurationText').textContent = log.duration || '30 min';
+                    const restEl = document.getElementById('modalWorkoutRestText');
+                    if (restEl) restEl.textContent = log.restDuration || '8 min';
+                    document.getElementById('modalWorkoutVolume').innerHTML = `<i class="ph ph-barbell"></i><span>${(log.exercises || []).length} exercises</span>`;
+
+                    let exHtml = '';
+                    (log.exercises || []).forEach(ex => {
+                        const catBadge = ex.category === 'weighted' ? '<span class="text-[9px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded font-medium">Weighted</span>' :
+                                        (ex.category === 'bodyweight' ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-medium">Bodyweight</span>' : 
+                                        '<span class="text-[9px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded font-medium">Mix</span>');
+
+                        exHtml += `
+                        <div class="bg-[#15161a] rounded-xl p-3">
+                            <div class="flex justify-between items-center mb-1.5">
+                                <span class="font-semibold text-xs text-white">${ex.name}</span>
+                                ${catBadge}
+                            </div>
+                            <div class="text-[11px] text-textSecondary flex flex-wrap gap-2">
+                                ${(ex.sets || []).map((s, sIdx) => {
+                                    let weightDisplay = s.weight;
+                                    if (ex.category === 'bodyweight') weightDisplay = 'BW';
+                                    else if (ex.category === 'mix') weightDisplay = `BW ${s.weight}kg`;
+                                    else weightDisplay = `${s.weight}kg`;
+                                    return `<span>Set ${sIdx + 1}: <strong class="text-white">${weightDisplay} × ${s.reps}</strong></span>`;
+                                }).join(' • ')}
+                            </div>
+                        </div>
+                        `;
+                    });
+                    document.getElementById('modalExercisesList').innerHTML = exHtml;
+
+                    const noteCont = document.getElementById('modalNotesContainer');
+                    if (log.notes) {
+                        document.getElementById('modalWorkoutNotes').textContent = log.notes;
+                        noteCont.style.display = 'block';
+                    } else {
+                        noteCont.style.display = 'none';
+                    }
+
+                    document.getElementById('workoutModal').style.display = 'flex';
+                    setTimeout(refreshHoverTargets, 10);
+                }
+            });
+
+            // Check for loaded template from Saved Workouts page
+            const copyTemplateRaw = localStorage.getItem('workout_active_copy_template');
+            if (copyTemplateRaw) {
+                try {
+                    const copyTpl = JSON.parse(copyTemplateRaw);
+                    localStorage.removeItem('workout_active_copy_template');
+                    if (copyTpl) {
+                        if (copyTpl.title) document.getElementById('workoutTitleInput').value = copyTpl.title;
+                        if (copyTpl.routine) selectRoutine(copyTpl.routine);
+                        if (copyTpl.exercises) exercises = JSON.parse(JSON.stringify(copyTpl.exercises));
+                        if (copyTpl.notes) document.getElementById('workoutNotesInput').value = copyTpl.notes;
+                        renderExercises();
+                        setTimeout(() => showToast(`Loaded "${copyTpl.title}" to log!`), 300);
+                    }
+                } catch(e) {}
+            }
+
+            // Dynamic Hover Labels
+            const label = document.createElement('div');
+            label.style.position = 'fixed';
+            label.style.backgroundColor = '#ff0055';
+            label.style.color = 'white';
+            label.style.fontWeight = 'bold';
+            label.style.fontSize = '12px';
+            label.style.width = '24px';
+            label.style.height = '24px';
+            label.style.display = 'none';
+            label.style.justifyContent = 'center';
+            label.style.alignItems = 'center';
+            label.style.borderRadius = '50%';
+            label.style.zIndex = '99999999';
+            label.style.pointerEvents = 'none';
+            label.style.boxShadow = '0 2px 10px rgba(0,0,0,0.8)';
+            label.style.fontFamily = 'Inter, sans-serif';
+            document.body.appendChild(label);
+
+            function refreshHoverTargets() {
+                let count = 0;
+                document.querySelectorAll('.hover-target').forEach((el) => {
+                    const isHiddenParent = el.closest('[style*="display: none"]');
+                    if (isHiddenParent) return;
+
+                    count++;
+                    const id = count;
+                    el.setAttribute('data-id', id);
+
+                    el.onmouseenter = (e) => {
+                        e.stopPropagation();
+                        const rect = el.getBoundingClientRect();
+                        label.textContent = id;
+                        label.style.display = 'flex';
+                        label.style.top = Math.max(4, rect.top - 10) + 'px';
+                        label.style.left = Math.max(4, rect.left - 10) + 'px';
+                        el.style.outline = '2px dashed #ff0055';
+                    };
+                    el.onmouseleave = (e) => {
+                        label.style.display = 'none';
+                        el.style.outline = '';
+                    };
+                });
+            }
+            window.refreshHoverTargets = refreshHoverTargets;
+            refreshHoverTargets();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "appId": "com.workout.app",
+  "appName": "Workouts",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#0d0d0f",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0d0d0f"
+    },
+    "Keyboard": {
+      "resize": "body"
+    }
+  }
+}

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saved Workouts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#0d0d0f',
+                        card: '#1e1f23',
+                        cardHover: '#2a2b30',
+                        textPrimary: '#ffffff',
+                        textSecondary: '#9ca3af',
+                        accent: '#ffffff'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0d0d0f; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .mobile-container { width: 100%; max-width: 400px; background-color: #0d0d0f; height: 850px; border-radius: 40px; overflow: hidden; position: relative; box-shadow: 0 0 0 10px #1a1a1a, 0 25px 50px -12px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .hover-target { position: relative; outline: 2px solid transparent; transition: outline 0.2s ease; }
+    </style>
+</head>
+<body>
+
+    <!-- Page Switcher Badge -->
+    <div class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[999999] bg-[#1e1f23]/95 backdrop-blur-md border border-gray-700/80 rounded-full px-4 py-1.5 shadow-2xl flex items-center space-x-3 text-xs">
+        <span class="bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full text-[11px] tracking-wide shadow-sm">PAGE 4</span>
+        <span class="font-semibold text-white">Saved Workouts</span>
+        <span class="text-gray-600">|</span>
+        <div class="flex items-center space-x-1.5 text-textSecondary font-medium">
+            <a href="index.html" class="px-2 py-0.5 rounded-md hover:bg-gray-800 hover:text-white transition-colors">P1: Dashboard</a>
+            <a href="upload_weight.html" class="px-2 py-0.5 rounded-md hover:bg-gray-800 hover:text-white transition-colors">P2: Weight</a>
+            <a href="log_workout.html" class="px-2 py-0.5 rounded-md hover:bg-gray-800 hover:text-white transition-colors">P3: Log</a>
+            <a href="saved_workouts.html" class="px-2 py-0.5 rounded-md bg-white/20 text-white font-bold">P4</a>
+        </div>
+    </div>
+
+    <!-- Mobile Device Frame -->
+    <div class="mobile-container overflow-hidden relative">
+        
+        <!-- Header -->
+        <header class="px-6 pt-12 pb-4 bg-[#0d0d0f]/95 backdrop-blur-md border-b border-gray-900 z-30 hover-target">
+            <div class="flex justify-between items-center">
+                <button onclick="window.location.href='index.html'" class="w-10 h-10 bg-card rounded-full flex justify-center items-center hover:bg-cardHover transition-colors hover-target" title="Back to Dashboard">
+                    <i class="ph ph-caret-left text-xl text-white"></i>
+                </button>
+                <div class="text-center">
+                    <h1 class="text-lg font-bold text-white tracking-tight hover-target">Saved Workouts</h1>
+                    <p id="totalWorkoutsCount" class="text-[11px] text-textSecondary hover-target">0 workouts recorded</p>
+                </div>
+                <button onclick="window.location.href='log_workout.html'" class="w-10 h-10 bg-white text-black rounded-full flex justify-center items-center hover:bg-gray-200 transition-colors shadow-sm hover-target" title="Log New Workout">
+                    <i class="ph ph-plus font-bold text-base"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Area (Scrollable) -->
+        <div class="flex-1 overflow-y-auto no-scrollbar px-6 pt-4 pb-32 space-y-4">
+
+            <!-- Stats Overview Card -->
+            <div id="statsSummaryCard" class="bg-card rounded-2xl p-4 border border-gray-800/70 hover-target">
+                <div class="text-[10px] uppercase font-bold text-textSecondary tracking-wider mb-2.5 flex items-center justify-between">
+                    <span>Performance Summary</span>
+                    <i class="ph ph-chart-line-up text-white"></i>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="bg-[#15161a] rounded-xl p-2.5 border border-gray-800/50">
+                        <div id="statTotalWorkouts" class="font-bold text-base text-white">0</div>
+                        <div class="text-[10px] text-textSecondary mt-0.5">Sessions</div>
+                    </div>
+                    <div class="bg-[#15161a] rounded-xl p-2.5 border border-gray-800/50">
+                        <div id="statTotalDuration" class="font-bold text-base text-white">0h 0m</div>
+                        <div class="text-[10px] text-textSecondary mt-0.5">Total Time</div>
+                    </div>
+                    <div class="bg-[#15161a] rounded-xl p-2.5 border border-gray-800/50">
+                        <div id="statTotalRest" class="font-bold text-base text-white">0h 0m</div>
+                        <div class="text-[10px] text-textSecondary mt-0.5">Rest Time</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workouts List Container -->
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-semibold text-xs text-textSecondary uppercase tracking-wider hover-target">Workout History</h2>
+                    <span id="filteredCountBadge" class="text-[11px] bg-white/10 text-gray-300 px-2 py-0.5 rounded-full font-medium">0 items</span>
+                </div>
+
+                <div id="workoutsList" class="space-y-3">
+                    <!-- Dynamic workout cards -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Fixed Bottom Navigation -->
+        <nav class="absolute bottom-0 w-full bg-[#0d0d0f]/95 backdrop-blur-md border-t border-gray-900 px-8 py-5 flex justify-between items-center z-50 hover-target">
+            <button onclick="window.location.href='index.html'" class="text-gray-600 hover:text-white transition-colors hover-target" title="Dashboard">
+                <i class="ph ph-squares-four text-2xl"></i>
+            </button>
+            <button onclick="window.location.href='saved_workouts.html'" class="text-white hover-target" title="Saved Workouts">
+                <i class="ph-fill ph-calendar-blank text-2xl"></i>
+            </button>
+            <button onclick="window.location.href='log_workout.html'" class="w-10 h-10 bg-white text-black rounded-full flex justify-center items-center hover:bg-gray-200 transition-transform active:scale-95 shadow-[0_0_15px_rgba(255,255,255,0.15)] hover-target" title="Log Workout">
+                <i class="ph ph-plus text-xl font-bold"></i>
+            </button>
+            <button onclick="window.location.href='upload_weight.html'" class="text-gray-600 hover:text-gray-300 transition-colors hover-target" title="Weight Tracker">
+                <i class="ph ph-chart-bar text-2xl"></i>
+            </button>
+            <button class="text-gray-600 hover:text-gray-300 transition-colors hover-target">
+                <i class="ph ph-chat-centered text-2xl"></i>
+            </button>
+        </nav>
+
+        <div class="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-1/3 h-1 bg-white rounded-full z-50"></div>
+
+        <!-- Workout Detail View Modal -->
+        <div id="workoutDetailModal" style="display: none;" class="absolute inset-0 z-[999] justify-center items-center p-6">
+            <div class="absolute inset-0 bg-black/75 backdrop-blur-[2px]" onclick="closeWorkoutDetailModal()"></div>
+            <div class="bg-card w-full max-h-[85%] overflow-y-auto rounded-3xl p-6 relative z-10 shadow-2xl border border-gray-800 no-scrollbar hover-target">
+                <div class="flex justify-between items-start mb-3 hover-target">
+                    <div>
+                        <h3 id="p4ModalWorkoutTitle" class="text-lg font-bold text-white hover-target">Workout Details</h3>
+                        <p id="p4ModalWorkoutDate" class="text-xs text-textSecondary mt-0.5 hover-target"></p>
+                    </div>
+                    <button onclick="closeWorkoutDetailModal()" class="w-8 h-8 bg-gray-800 rounded-full flex justify-center items-center hover:bg-gray-700 transition-colors hover-target">
+                        <i class="ph ph-x text-white"></i>
+                    </button>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-2 mb-4 text-xs text-white hover-target">
+                    <span id="p4ModalWorkoutRoutine" class="flex items-center space-x-1 text-white bg-[#15161a] px-2.5 py-1 rounded-lg hover-target">
+                        <i class="ph ph-lightning text-white"></i>
+                        <span>Routine</span>
+                    </span>
+                    <span id="p4ModalWorkoutDuration" class="flex items-center space-x-1 text-white bg-[#15161a] px-2.5 py-1 rounded-lg hover-target">
+                        <i class="ph ph-timer text-white"></i>
+                        <span id="p4ModalWorkoutDurationText">30 min</span>
+                    </span>
+                    <span id="p4ModalWorkoutRest" class="flex items-center space-x-1 text-white bg-[#15161a] px-2.5 py-1 rounded-lg hover-target">
+                        <i class="ph-fill ph-hourglass-simple text-white"></i>
+                        <span>Rest: <span id="p4ModalWorkoutRestText">8 min</span></span>
+                    </span>
+                    <span id="p4ModalWorkoutVolume" class="flex items-center space-x-1 text-white bg-[#15161a] px-2.5 py-1 rounded-lg hover-target">
+                        <i class="ph ph-barbell text-white"></i>
+                        <span>Exercises</span>
+                    </span>
+                </div>
+
+                <div id="p4ModalExercisesList" class="space-y-2 mb-4 hover-target"></div>
+
+                <div id="p4ModalNotesContainer" class="bg-[#15161a] rounded-2xl p-4 hidden mb-4 hover-target">
+                    <p class="text-xs text-textSecondary mb-1 font-semibold hover-target">Notes</p>
+                    <p id="p4ModalWorkoutNotes" class="text-xs text-gray-300 whitespace-pre-wrap hover-target"></p>
+                </div>
+
+                <div class="pt-2 flex space-x-2">
+                    <button id="btnModalRepeatWorkout" class="flex-1 bg-white text-black font-semibold rounded-xl py-2.5 text-xs hover:bg-gray-200 transition-colors flex items-center justify-center space-x-1.5 shadow hover-target">
+                        <i class="ph ph-arrow-clockwise font-bold"></i>
+                        <span>Log Again (Copy)</span>
+                    </button>
+                    <button id="btnModalDeleteWorkout" class="px-4 bg-white/10 text-white font-semibold rounded-xl py-2.5 text-xs hover:bg-white/20 transition-colors flex items-center justify-center space-x-1 hover-target">
+                        <i class="ph ph-trash text-sm"></i>
+                        <span>Delete</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Floating label setup
+        const label = document.createElement('div');
+        label.style.position = 'fixed';
+        label.style.backgroundColor = '#ff0055';
+        label.style.color = 'white';
+        label.style.fontWeight = 'bold';
+        label.style.fontSize = '12px';
+        label.style.width = '24px';
+        label.style.height = '24px';
+        label.style.display = 'none';
+        label.style.justifyContent = 'center';
+        label.style.alignItems = 'center';
+        label.style.borderRadius = '50%';
+        label.style.zIndex = '99999999';
+        label.style.pointerEvents = 'none';
+        label.style.boxShadow = '0 2px 10px rgba(0,0,0,0.8)';
+        label.style.fontFamily = 'Inter, sans-serif';
+        document.body.appendChild(label);
+
+        function refreshHoverTargets() {
+            let count = 0;
+            document.querySelectorAll('.hover-target').forEach((el) => {
+                const isHiddenParent = el.closest('[style*="display: none"]');
+                if (isHiddenParent) return;
+
+                count++;
+                const id = count;
+                el.setAttribute('data-id', id);
+
+                el.onmouseenter = (e) => {
+                    e.stopPropagation();
+                    const rect = el.getBoundingClientRect();
+                    label.textContent = id;
+                    label.style.display = 'flex';
+                    label.style.top = Math.max(4, rect.top - 10) + 'px';
+                    label.style.left = Math.max(4, rect.left - 10) + 'px';
+                    el.style.outline = '2px dashed #ff0055';
+                };
+                el.onmouseleave = () => {
+                    label.style.display = 'none';
+                    el.style.outline = '';
+                };
+            });
+        }
+        window.refreshHoverTargets = refreshHoverTargets;
+
+        // Saved Workouts Page Logic
+        let activeRoutineFilter = 'All';
+        let currentViewingIndex = -1;
+
+        function getHistory() {
+            return JSON.parse(localStorage.getItem('workout_logs_history') || '[]');
+        }
+
+        function saveHistory(history) {
+            localStorage.setItem('workout_logs_history', JSON.stringify(history));
+        }
+
+        function calculateStats(history) {
+            document.getElementById('totalWorkoutsCount').textContent = `${history.length} workout${history.length === 1 ? '' : 's'} recorded`;
+            document.getElementById('statTotalWorkouts').textContent = history.length;
+
+            let totalDurSeconds = 0;
+            let totalRestSeconds = 0;
+
+            history.forEach(item => {
+                let dSec = item.durationSeconds;
+                if (!dSec && item.duration) {
+                    const match = item.duration.match(/(\d+)\s*min/);
+                    if (match) dSec = parseInt(match[1], 10) * 60;
+                }
+                totalDurSeconds += (dSec || 1800);
+
+                let rSec = item.restDurationSeconds;
+                if (!rSec && item.restDuration) {
+                    const rMatch = item.restDuration.match(/(\d+)\s*min/);
+                    if (rMatch) rSec = parseInt(rMatch[1], 10) * 60;
+                }
+                totalRestSeconds += (rSec || Math.round((dSec || 1800) * 0.25));
+            });
+
+            const dH = Math.floor(totalDurSeconds / 3600);
+            const dM = Math.floor((totalDurSeconds % 3600) / 60);
+            document.getElementById('statTotalDuration').textContent = `${dH}h ${dM}m`;
+
+            const rH = Math.floor(totalRestSeconds / 3600);
+            const rM = Math.floor((totalRestSeconds % 3600) / 60);
+            document.getElementById('statTotalRest').textContent = `${rH}h ${rM}m`;
+        }
+
+        function renderWorkouts() {
+            const history = getHistory();
+            calculateStats(history);
+
+            let filtered = history.map((item, originalIndex) => ({ ...item, originalIndex }));
+
+            document.getElementById('filteredCountBadge').textContent = `${filtered.length} workout${filtered.length === 1 ? '' : 's'}`;
+
+            const container = document.getElementById('workoutsList');
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                <div class="bg-card/40 rounded-3xl p-8 text-center text-textSecondary space-y-3 border border-dashed border-gray-800">
+                    <div class="w-12 h-12 rounded-full bg-gray-800/80 text-white flex items-center justify-center mx-auto text-xl">
+                        <i class="ph ph-barbell"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-white">No workouts found</p>
+                        <p class="text-xs text-textSecondary mt-1">${history.length === 0 ? "You haven't logged any workouts yet." : "Try adjusting your search or routine filter."}</p>
+                    </div>
+                    <button onclick="window.location.href='log_workout.html'" class="text-xs font-semibold text-black bg-white hover:bg-gray-200 px-4 py-2 rounded-xl transition-all inline-flex items-center space-x-1.5 shadow-sm">
+                        <i class="ph ph-plus font-bold"></i>
+                        <span>Log New Workout</span>
+                    </button>
+                </div>
+                `;
+                setTimeout(refreshHoverTargets, 10);
+                return;
+            }
+
+            let html = '';
+            filtered.forEach((item) => {
+                const index = item.originalIndex;
+                const dateObj = new Date(item.date || item.timestamp);
+                const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const timeStr = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                const exCount = (item.exercises || []).length;
+                let totalSets = 0;
+                (item.exercises || []).forEach(ex => { totalSets += (ex.sets || []).length; });
+
+                const durationStr = item.duration || '30 min';
+                const restStr = item.restDuration || '8 min';
+
+                html += `
+                <div onclick="openWorkoutDetail(${index})" class="bg-card border border-gray-800/80 hover:border-gray-600 rounded-2xl p-4 flex flex-col space-y-3 hover-target cursor-pointer hover:bg-cardHover transition-all group shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h3 class="font-bold text-sm text-white transition-colors">${item.title}</h3>
+                                <span class="text-[10px] bg-white/10 text-white px-2 py-0.5 rounded-full font-medium">${item.routine || 'Workout'}</span>
+                            </div>
+                            <p class="text-[11px] text-textSecondary mt-0.5">
+                                <i class="ph ph-calendar text-xs mr-0.5"></i>${dateStr} at ${timeStr}
+                            </p>
+                        </div>
+                        <div class="flex items-center space-x-1" onclick="event.stopPropagation()">
+                            <button onclick="repeatWorkout(${index})" class="text-white hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10 hover-target" title="Log this workout again">
+                                <i class="ph ph-arrow-clockwise text-base"></i>
+                            </button>
+                            <button onclick="deleteWorkout(${index})" class="text-gray-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10 hover-target" title="Delete workout">
+                                <i class="ph ph-trash text-base"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Stats Badges Strip -->
+                    <div class="flex flex-wrap items-center gap-2 pt-1 text-[11px]">
+                        <span class="flex items-center space-x-1 bg-[#15161a] border border-gray-800 px-2.5 py-1 rounded-lg text-white">
+                            <i class="ph ph-timer text-xs text-white"></i>
+                            <span>${durationStr}</span>
+                        </span>
+                        <span class="flex items-center space-x-1 bg-[#15161a] border border-gray-800 px-2.5 py-1 rounded-lg text-white">
+                            <i class="ph-fill ph-hourglass-simple text-xs text-white"></i>
+                            <span>Rest: ${restStr}</span>
+                        </span>
+                        <span class="flex items-center space-x-1 bg-[#15161a] border border-gray-800 px-2.5 py-1 rounded-lg text-white">
+                            <i class="ph ph-barbell text-xs text-white"></i>
+                            <span>${exCount} exercises • ${totalSets} sets</span>
+                        </span>
+                    </div>
+
+                    <!-- Exercises preview preview tags -->
+                    ${exCount > 0 ? `
+                    <div class="flex flex-wrap gap-1.5 pt-0.5 border-t border-gray-800/60">
+                        ${(item.exercises || []).slice(0, 3).map(ex => `
+                            <span class="text-[10px] bg-[#15161a] text-textSecondary px-2 py-0.5 rounded border border-gray-800/80">${ex.name} (${(ex.sets || []).length} sets)</span>
+                        `).join('')}
+                        ${exCount > 3 ? `<span class="text-[10px] text-textSecondary px-1 py-0.5">+${exCount - 3} more</span>` : ''}
+                    </div>
+                    ` : ''}
+                </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            setTimeout(refreshHoverTargets, 10);
+        }
+
+        window.openWorkoutDetail = function(index) {
+            currentViewingIndex = index;
+            const history = getHistory();
+            const log = history[index];
+            if (!log) return;
+
+            document.getElementById('p4ModalWorkoutTitle').textContent = log.title;
+            const dateObj = new Date(log.date || log.timestamp);
+            document.getElementById('p4ModalWorkoutDate').textContent = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+            document.getElementById('p4ModalWorkoutRoutine').innerHTML = `<i class="ph ph-lightning text-white"></i><span>${log.routine || 'Workout'}</span>`;
+            document.getElementById('p4ModalWorkoutDurationText').textContent = log.duration || '30 min';
+            document.getElementById('p4ModalWorkoutRestText').textContent = log.restDuration || '8 min';
+
+            let totalSets = 0;
+            (log.exercises || []).forEach(ex => { totalSets += (ex.sets || []).length; });
+            document.getElementById('p4ModalWorkoutVolume').innerHTML = `<i class="ph ph-barbell text-white"></i><span>${(log.exercises || []).length} exercises • ${totalSets} sets</span>`;
+
+            let exHtml = '';
+            (log.exercises || []).forEach(ex => {
+                const catBadge = '<span class="text-[9px] bg-white/10 text-white px-1.5 py-0.5 rounded font-medium">' + (ex.category === 'weighted' ? 'Weighted' : (ex.category === 'bodyweight' ? 'Bodyweight' : 'Mix')) + '</span>';
+
+                exHtml += `
+                <div class="bg-[#15161a] border border-gray-800/80 rounded-xl p-3 hover-target">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-semibold text-xs text-white">${ex.name || 'Exercise'}</span>
+                        ${catBadge}
+                    </div>
+                    <div class="text-[11px] text-textSecondary flex flex-wrap gap-2">
+                        ${(ex.sets || []).map((s, sIdx) => {
+                            let weightDisplay = s.weight;
+                            if (ex.category === 'bodyweight') weightDisplay = 'BW';
+                            else if (ex.category === 'mix') weightDisplay = `BW ${s.weight}kg`;
+                            else weightDisplay = `${s.weight}kg`;
+                            return `<span class="bg-card px-2 py-0.5 rounded text-gray-300">Set ${sIdx + 1}: <strong class="text-white">${weightDisplay} × ${s.reps}</strong></span>`;
+                        }).join('')}
+                    </div>
+                </div>
+                `;
+            });
+            document.getElementById('p4ModalExercisesList').innerHTML = exHtml;
+
+            const noteCont = document.getElementById('p4ModalNotesContainer');
+            if (log.notes) {
+                document.getElementById('p4ModalWorkoutNotes').textContent = log.notes;
+                noteCont.classList.remove('hidden');
+            } else {
+                noteCont.classList.add('hidden');
+            }
+
+            document.getElementById('btnModalRepeatWorkout').onclick = () => repeatWorkout(index);
+            document.getElementById('btnModalDeleteWorkout').onclick = () => {
+                deleteWorkout(index);
+                closeWorkoutDetailModal();
+            };
+
+            document.getElementById('workoutDetailModal').style.display = 'flex';
+            setTimeout(refreshHoverTargets, 10);
+        };
+
+        window.closeWorkoutDetailModal = function() {
+            document.getElementById('workoutDetailModal').style.display = 'none';
+            setTimeout(refreshHoverTargets, 10);
+        };
+
+        window.deleteWorkout = function(index) {
+            let history = getHistory();
+            history.splice(index, 1);
+            saveHistory(history);
+            renderWorkouts();
+        };
+
+        window.repeatWorkout = function(index) {
+            const history = getHistory();
+            const log = history[index];
+            if (!log) return;
+
+            // Save as current template into localStorage for Page 3 to pick up
+            const template = {
+                id: Date.now(),
+                title: log.title,
+                routine: log.routine,
+                exercises: log.exercises,
+                notes: log.notes
+            };
+            localStorage.setItem('workout_active_copy_template', JSON.stringify(template));
+            window.location.href = 'log_workout.html?load_template=1';
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderWorkouts();
+        });
+    </script>
+</body>
+</html>
